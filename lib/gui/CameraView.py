@@ -58,6 +58,10 @@ class CameraCanvas(Canvas):
 
             offset = w / (len(self.images) + 1)
 
+            # Store the address + port of the peer being "viewed"
+
+            view = None
+
             # Iterate over the connected webcams
             
             for i, value in enumerate(self.images.values()):
@@ -77,16 +81,44 @@ class CameraCanvas(Canvas):
                 lbly1 = lbl.winfo_rooty()
                 lbly2 = lbly1 + img.height()
 
+                client_islooking = (lblx1 < mousex < lblx2 and lbly1 < mousey < lbly2)
+
+                # Store the IP address
+
+                if client_islooking:
+
+                    view = camera.address[0]
+
+                # If the peer and client are looking at each other, show it blue
+
+                if camera.islooking and client_islooking:
+
+                    lbl.config(image=img, bg="blue")
+
+                # If this peer is "looking" at the client, show it green
+
+                elif camera.islooking:
+
+                    lbl.config(image=img, bg="green")
+
                 # If mouse is hovering on a label, send info to other client and update colours
 
-                if lblx1 < mousex < lblx2 and lbly1 < mousey < lbly2:
+                elif client_islooking:
 
                     lbl.config(image=img, bg="red")
+
+                # Show it white
 
                 else:
 
                     lbl.config(image=img, bg="white")
 
+                # Make sure it's in the right place
+
                 lbl.place(x=offset + (i * offset), y=10, anchor="n")
+
+            # Update the reference to the address of the camera being viewed
+
+            self.images['local'][0].view = view      
 
         self.after(50, self.update)

@@ -22,11 +22,17 @@ class RequestHandler(SocketServer.BaseRequestHandler):
 
         while self.server.running:
 
-            data = self.server.camera.get_last_frame()
+            try:
 
-            if data is not None:
+                # Send a 1 or 0 if the requesting client is being "viewed"
+                
+                self.request.send(str(int(self.server.camera.view == self.client_address[0])))
 
-                try:
+                # Send the image
+
+                data = self.server.camera.get_last_frame()
+
+                if data is not None:
 
                     f = self.request.makefile()
 
@@ -34,11 +40,9 @@ class RequestHandler(SocketServer.BaseRequestHandler):
 
                     f.close()
 
-                except socket.error:
+            except socket.error:
 
-                    pass
-        
-        return None
+                return
 
 class Server:
     def __init__(self):

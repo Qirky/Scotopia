@@ -11,7 +11,9 @@ class VideoStream(object):
     def __init__(self):
         self._frame = numpy.zeros([200,200,3], dtype='uint8')
         self._w = 200
-        self._h = 200        
+        self._h = 200
+        self.islooking = False
+        self.address = ('localhost', 59123)
     def read(self):
         return self._frame
     def width(self):
@@ -44,6 +46,10 @@ class Camera(VideoStream):
         if not ret:
 
             raise Exception("No web cam detected")
+
+        # Keep track of what "this" camera/client is looking at
+        # is a tuple: (address, port)
+        self.view = None
 
         # Setup threading
         self.running = True
@@ -93,11 +99,20 @@ class PeerCam(VideoStream):
 
         while self.running:
 
+            # 1. Single integer 1 or 0 if this peer is viewing the local client
+
+            self.islooking = bool(int(self.socket.recv(1)))
+
+            # 2. Read the numpy array of the image
+
             data = self.socket.makefile()
 
             try:
+
                 self._frame = pickle.load(data)
+                
             except:
+
                 self._frame = self.empty_frame()
                 
             self._w = int(self._frame.shape[1])
