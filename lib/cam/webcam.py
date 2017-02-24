@@ -6,17 +6,14 @@ from PIL import Image, ImageTk
 from threading import Thread
 from time import sleep
 
-BLANK_IMAGE = numpy.zeros([200,200,3], dtype='uint8')
 
 class VideoStream(object):
-    def empty_frame(self):
-        """ Returns a numpy array of zeros """
-        return BLANK_IMAGE
+    def __init__(self):
+        self._frame = numpy.zeros([200,200,3], dtype='uint8')
+        self._w = 200
+        self._h = 200        
     def read(self):
-        if self._frame is not None:
-            return self._frame
-        else:
-            return self.empty_frame()
+        return self._frame
     def width(self):
         return self._w
     def height(self):
@@ -28,29 +25,28 @@ class VideoStream(object):
         cv2.imshow(frame, self._frame)
     def close(self):
         cv2.destroyAllWindows()
-    
 
 class Camera(VideoStream):
 
     def __init__(self):
+
+        # Inheritance
+        VideoStream.__init__(self)
 
         # Get webcam & width + height
         self.src = cv2.VideoCapture(0)
         self._w = int(self.src.get(3))
         self._h = int(self.src.get(4))
 
-        self._frame = None
-
         # Test if webcam is present
-        
         ret, _ = self.src.read()
 
         if not ret:
 
             raise Exception("No web cam detected")
-        
-        self.running = True
 
+        # Setup threading
+        self.running = True
         self.thread = Thread(target=self.run)
         self.thread.start()
 
@@ -80,14 +76,15 @@ class Camera(VideoStream):
 
 class PeerCam(VideoStream):
     def __init__(self, ip):
+        # Inheritance
+        VideoStream.__init__(self)
+        
         # Setup networking
         self.address = (ip, 59123)
         self.socket = socket.socket()
         self.socket.connect(self.address)
 
-        self._w = None
-        self._h = None
-
+        # Setup threading
         self.running = True
         self.thread = Thread(target=self.run)
         self.thread.start()
