@@ -3,6 +3,8 @@ import cPickle as pickle
 import numpy
 import cv2
 from PIL import Image, ImageTk
+from threading import Thread
+from time import sleep
 
 BLANK_IMAGE = numpy.zeros([200,200,3], dtype='uint8')
 
@@ -11,7 +13,10 @@ class VideoStream(object):
         """ Returns a numpy array of zeros """
         return BLANK_IMAGE
     def read(self):
-        return self._frame
+        if self._frame is not None:
+            return self._frame
+        else:
+            return self.empty_frame()
     def width(self):
         return self._w
     def height(self):
@@ -36,22 +41,40 @@ class Camera(VideoStream):
 
         self._frame = None
 
-    def read(self, height=0):
+        # Test if webcam is present
+        
+        ret, _ = self.src.read()
 
-        # Capture frame-by-frame
-        ret, self._frame = self.src.read()
+        if not ret:
 
-        # Flip frame in the x-axis
+            raise Exception("No web cam detected")
+        
+        self.running = True
 
-        self._frame = cv2.flip(self._frame, 1)
+        self.thread = Thread(target=self.run)
+        self.thread.start()
 
-        # Convert to RGB for Tkinter
+    def run(self):
 
-        self._frame = cv2.cvtColor(self._frame, cv2.COLOR_BGR2RGB)
+        while self.running:
 
-        return self._frame
+            # Capture frame-by-frame
+            ret, f = self.src.read()
+
+            # Flip frame in the x-axis
+
+            f = cv2.flip(f, 1)
+
+            # Convert to RGB for Tkinter
+
+            self._frame = cv2.cvtColor(f, cv2.COLOR_BGR2RGB)                
+
+            # 30fps
+
+            sleep(0.03)
 
     def close(self):
+        self.running = False
         self.src.release()
         VideoStream.close(self)
 
@@ -64,23 +87,31 @@ class PeerCam(VideoStream):
 
         self._w = None
         self._h = None
+
+        self.running = True
+        self.thread = Thread(target=self.run)
+        self.thread.start()
     
-    def read(self):
-        data = self.socket.makefile()
+    def run(self):
 
-        try:
-            self._frame = pickle.load(data)
-        except:
-            self._frame = self.empty_frame()
-            
-        self._w = int(self._frame.shape[1])
-        self._h = int(self._frame.shape[0])
+        while self.running:
 
-        data.close()
+            data = self.socket.makefile()
 
-        return self._frame
+            try:
+                self._frame = pickle.load(data)
+            except:
+                self._frame = self.empty_frame()
+                
+            self._w = int(self._frame.shape[1])
+            self._h = int(self._frame.shape[0])
+
+            data.close()
+
+            sleep(0.03)
 
     def close(self):
+        self.running = False
         self.socket.close()
         VideoStream.close(self)
 
