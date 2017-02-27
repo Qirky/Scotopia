@@ -87,7 +87,8 @@ class PeerCam(VideoStream):
         VideoStream.__init__(self)
         
         # Setup networking
-        self.address = (ip, 59123)
+        self.ip_addr = ip
+        self.address = (self.ip_addr, 59123)
         self.socket = socket.socket()
 
         # Keep info on the local server to send to the peer
@@ -104,9 +105,13 @@ class PeerCam(VideoStream):
         # Recv remote address book 
         data = self.socket.recv(2048)
 
+        print data
+        print self.local_server.get_address_book()
+        raw_input()
+
         for ip_addr in data.split():
 
-            if ip_addr not in self.local_server.get_address_book():
+            if ip_addr not in self.local_server.get_address_book() and ip_addr != self.ip_addr:
 
                 self.local_server.add_new_peer(ip_addr)
 

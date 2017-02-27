@@ -75,8 +75,7 @@ class Server:
     def set_camera(self, camera_instance):
         """ Gives the serve a reference to the webcam viewer object and updates
             the 'localhost' entry in its address book dictionary. """
-        self.__server.camera = camera_instance
-        self.__server.address_book[self.host] = camera_instance
+        self.__server.address_book[self.__server.server_address[0]] = self.__server.camera = camera_instance
 
     def add_new_peer(self, ip_addr):
         """ Adds a new peer to the server address book if that address
