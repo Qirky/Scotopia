@@ -8,8 +8,9 @@ from time import sleep
 
 
 class VideoStream(object):
+    blank = numpy.zeros([200,200,3], dtype='uint8')
     def __init__(self):
-        self._frame = numpy.zeros([200,200,3], dtype='uint8')
+        self._frame = self.blank
         self._w = 200
         self._h = 200
         self.islooking = False
@@ -47,8 +48,7 @@ class Camera(VideoStream):
 
             raise Exception("No web cam detected")
 
-        # Keep track of what "this" camera/client is looking at
-        # is a tuple: (address, port)
+        # Keep track of what camera "this" camera/client is looking at
         self.view = None
 
         # Setup threading
@@ -81,14 +81,37 @@ class Camera(VideoStream):
         VideoStream.close(self)
 
 class PeerCam(VideoStream):
-    def __init__(self, ip):
+    """ Class representing the webcam client on a remote machine """
+    def __init__(self, ip, server=None):
         # Inheritance
         VideoStream.__init__(self)
         
         # Setup networking
         self.address = (ip, 59123)
         self.socket = socket.socket()
+
+        # Keep info on the local server to send to the peer
+        self.local_server = server
+
+        # create  connection
+        self.connect()
+
+    def connect(self):
+
+        # Connect to the remote
         self.socket.connect(self.address)
+
+        # Recv remote address book 
+        data = self.socket.recv(2048)
+
+        for ip_addr in data.split():
+
+            if ip_addr not in self.local_server.get_address_book():
+
+                self.local_server.new_peer(ip_addr)
+
+        # Push local address book
+        self.socket.send(self.local_server.address_book_as_string())
 
         # Setup threading
         self.running = True

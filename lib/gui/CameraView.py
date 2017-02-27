@@ -1,19 +1,59 @@
 from Tkinter import Canvas, Label
 from PIL import Image, ImageTk
 
+class basicEvent:
+    def __init__(self, h, w):
+        self.height = h
+        self.width = w
+
 class CameraCanvas(Canvas):
-    def __init__(self, master):
+    def __init__(self, master, **kwargs):
         self.app   = master
         self.root  = master.root
 
+        # Set up main canvas
+
         Canvas.__init__(self, self.root,
-                        background="black")
+                        background="black",
+                        **kwargs)
+
+        self.width = self.winfo_reqwidth()
+        self.height = self.winfo_reqheight()
+        self.old_height = self.height
+
+        self.bind("<Configure>", self.on_resize)
         
         self.grid(row=1, column=0, sticky="nsew" )
+
+        # Set up label info
+
+        self.label_border_size = 5
+        self.padding = 10
 
         self.images = {}
 
         self.update()
+
+    def on_resize(self, event=None):
+        # determine the ratio of old width/height to new width/height
+
+        eventh = event.height if event is not None else self.old_height
+        eventw = event.width  if event is not None else self.width
+
+        newheight = min(eventh, self.root.winfo_height() / 3)
+        newwidth  = min(eventw, self.app.text.winfo_width())
+        
+        wscale = float(newwidth)/self.width
+        hscale = float(newheight)/self.height
+
+        self.width  = newwidth
+        self.height = newheight
+
+        # resize the canvas 
+        self.config(width=self.width, height=self.height)
+
+        # rescale all the objects tagged with the "all" tag
+        self.scale("all", 0, 0, wscale, hscale)
 
     def get_size(self):
         return self.root.winfo_width(), self.root.winfo_height()
@@ -52,9 +92,14 @@ class CameraCanvas(Canvas):
 
             # Get width & height
 
-            w, h = self.get_size()
+            w = self.width
+            h = self.height - ((self.label_border_size + self.padding) * 2)
 
-            h /= 4
+            if h <= 0:
+
+                h = self.old_height - ((self.label_border_size + self.padding) * 2)
+
+                self.on_resize()
 
             offset = w / (len(self.images) + 1)
 
@@ -64,13 +109,11 @@ class CameraCanvas(Canvas):
 
             # Iterate over the connected webcams
             
-            for i, value in enumerate(self.images.values()):
-
-                camera, lbl = value
+            for i, lbl in enumerate(self.images.values()):
 
                 # Get the webcam image but make sure the height is correct
 
-                img = self.convert_to_photo_image(camera, height=h)
+                img = self.convert_to_photo_image(lbl.camera, height=h)
                 lbl.image = img
 
                 # Get co-ordinates
@@ -87,17 +130,17 @@ class CameraCanvas(Canvas):
 
                 if client_islooking:
 
-                    view = camera.address[0]
+                    view = lbl.camera.address[0]
 
                 # If the peer and client are looking at each other, show it blue
 
-                if camera.islooking and client_islooking:
+                if lbl.camera.islooking and client_islooking:
 
                     lbl.config(image=img, bg="blue")
 
                 # If this peer is "looking" at the client, show it green
 
-                elif camera.islooking:
+                elif lbl.camera.islooking:
 
                     lbl.config(image=img, bg="green")
 
@@ -115,10 +158,34 @@ class CameraCanvas(Canvas):
 
                 # Make sure it's in the right place
 
-                lbl.place(x=offset + (i * offset), y=10, anchor="n")
+                lbl.place(x=offset + (i * offset), y=self.padding, anchor="n")
 
             # Update the reference to the address of the camera being viewed
 
-            self.images['local'][0].view = view      
+            self.images['local'].camera.view = view      
 
         self.after(50, self.update)
+
+class ClientLabel(Label):
+    """ TKinter Label that holds webcam images """
+    def __init__(self, root, client, *args, **kwargs):
+        Label.__init__(self, root, **kwargs)
+        self.camera = client
+        self.bind("<Button-1>", self.on_mousepress)
+
+    def on_mousepress(self, event):
+        print "hello"
+
+
+
+
+
+
+
+
+
+
+
+
+
+        

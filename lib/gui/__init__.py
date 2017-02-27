@@ -1,4 +1,3 @@
-
 #stdlib
 import sys
 
@@ -10,9 +9,9 @@ import tkFileDialog
 import tkMessageBox
 
 # Scotopia GUI Modules
-from TextEditor import TextEditor
 from MenuBar import MenuBar
-from CameraView import CameraCanvas
+from TextEditor import TextEditor
+from CameraView import CameraCanvas, ClientLabel
 
 class App:
 
@@ -21,6 +20,9 @@ class App:
         # We are running a server instance
 
         self.server = server_instance
+        self.server.app = self
+
+        # Number of connected peers
 
         self.__peers = 0
 
@@ -28,8 +30,8 @@ class App:
 
         self.root = Tk()
         self.root.title("Scotopia")
-        self.root.rowconfigure(0, weight=0)
-        self.root.rowconfigure(1, weight=1)
+        self.root.rowconfigure(0, weight=1)
+        self.root.rowconfigure(1, weight=0)
         self.root.columnconfigure(1, weight=0)
         self.root.grid_columnconfigure(0, weight=1)
         self.root.protocol("WM_DELETE_WINDOW", self.kill )
@@ -49,7 +51,8 @@ class App:
         # Set up text box
         self.y_scroll = Scrollbar(self.root)
         self.y_scroll.grid(row=0, column=1, sticky='nsew')
-        self.text = TextEditor(self)
+
+        self.text = TextEditor(self, height=15, width=75)
 
         # Add menubar
         
@@ -75,29 +78,29 @@ class App:
         self.__peers += 1
         return self.__peers
 
-    def add_peer(self, ip_addr):
+    def add_peer(self, new_peer):
         """ Connects to another Scotopia instance and adds to address book """
-        new_peer = self.server.new_peer(ip_addr)
-
         if new_peer != None:
 
             self.add_image("peer" + str(self.nextPeerID()), new_peer)
 
+        return
+
     def add_image(self, name, camera_instance):
-        lbl = Label(self.canvas, bg="white", bd=5)
-        self.canvas.images[name] = (camera_instance, lbl)
+        lbl = ClientLabel(self.canvas, camera_instance, bg="white", bd=self.canvas.label_border_size)
+        self.canvas.images[name] = lbl
+        self.canvas.itemconfig(lbl, tags="all")
         lbl.pack()
 
     def kill(self):
 
-        for camera, label in self.canvas.images.values():
+        for label in self.canvas.images.values():
 
-            camera.close()
+            label.camera.close()
 
         self.server.close()
 
         self.root.destroy()
-        
 
 if __name__ == "__main__":
 

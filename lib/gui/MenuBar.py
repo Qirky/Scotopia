@@ -33,7 +33,15 @@ class MenuBar(Menu):
 
         if ip_addr:
 
-            self.app.add_peer(ip_addr)
+            if ip_addr not in self.app.server.get_address_book():
+
+                self.app.server.add_new_peer(ip_addr)
+
+            else:
+
+                print("Error: A connection to '{}' already exists".format(ip_addr))
+
+        return
 
 from Tkinter import Button, Label, Entry
 import tkSimpleDialog

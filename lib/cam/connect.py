@@ -12,13 +12,27 @@ class RequestHandler(SocketServer.BaseRequestHandler):
     def handle(self):
         """ Is called when another client requests the current image
             and a boolean of whether this local machine is "looking"
-            at that client.
-            TODO
-            sends a 1 or 0 followed by a serial of the webcam image """
+            at that client. """
 
         # self.server = ThreadedServer
         # self.request = socket
         # self.client_address = (address, port)
+
+        # 1. On initial connection, return the address book of peers of *this* peer
+
+        self.request.sendall(" ".join(self.server.address_book))
+
+        # 2. Get the address book of the requesting peer
+
+        data = self.request.recv(2048)
+
+        for ip_addr in data.split():
+
+            if ip_addr not in self.server.address_book:
+
+                self.server.add_new_peer(ip_addr)
+
+        # 3. Continually send webcam data to the requesting client
 
         while self.server.running:
 
@@ -53,16 +67,33 @@ class Server:
         self.server_thread = Thread(target=self.__server.serve_forever)
         self.server_thread.daemon = True
 
-    def set_camera(self, camera_instance):
-        self.__server.camera = camera_instance
+        self.__server.address_book = {}
+        self.__server.add_new_peer = self.add_new_peer
 
-    def new_peer(self, ip_addr):
+        self.app = None
+
+    def set_camera(self, camera_instance):
+        """ Gives the serve a reference to the webcam viewer object and updates
+            the 'localhost' entry in its address book dictionary. """
+        self.__server.camera = camera_instance
+        self.__server.address_book['localhost'] = camera_instance
+
+    def add_new_peer(self, ip_addr):
         try:
-            peer = PeerCam(ip_addr)
+            # Create new peer instance
+            peer = PeerCam(ip_addr, server=self)
+            self.__server.address_book[ip_addr] = peer
         except socket.gaierror:
             print("Could not connect to {}: the target host did not respond".format(ip_addr))
             peer = None
-        return peer
+        # Add the peer to the gui
+        self.app.add_peer(peer)
+
+    def get_address_book(self):
+        return self.__server.address_book
+
+    def address_book_as_string(self):
+        return " ".join(self.__server.address_book)
 
     def get_address(self):
         return self.__server.server_address

@@ -3,7 +3,7 @@ from Tkinter import *
     
 class TextEditor(Text):
 
-    def __init__(self, master):
+    def __init__(self, master, **kwargs):
 
         self.master = master
         self.root   = master.root
@@ -14,14 +14,16 @@ class TextEditor(Text):
 
         # Create textbox
 
-        Text.__init__(self, self.root, padx=5, pady=5,
-                            bg="black", fg="white",
-                            insertbackground="White",
-                            font = "Font",
-                            yscrollcommand=self.y_scroll.set,
-                            width=100, height=20, bd=0,
-                            undo=True, autoseparators=True,
-                            maxundo=50 )
+        Text.__init__(self, self.root,
+                      bg="black", fg="white",
+                      insertbackground="White",
+                      width=kwargs.get("width", 100),
+                      height=kwargs.get("height", 10),
+                      bd=kwargs.get("bd", 0),
+                      padx=5, pady=5,
+                      font = "Font",
+                      yscrollcommand=self.y_scroll.set,
+                      undo=True, autoseparators=True, maxundo=50 )
         
         self.grid(row=0, column=0, sticky="nsew")
         self.y_scroll.config(command=self.yview)
