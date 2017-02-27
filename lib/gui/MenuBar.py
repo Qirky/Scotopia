@@ -33,11 +33,9 @@ class MenuBar(Menu):
 
         if ip_addr:
 
-            if ip_addr not in self.app.server.get_address_book():
+            peer = self.app.server.add_new_peer(ip_addr)
 
-                self.app.server.add_new_peer(ip_addr)
-
-            else:
+            if peer is None:
 
                 print("Error: A connection to '{}' already exists".format(ip_addr))
 

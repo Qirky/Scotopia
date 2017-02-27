@@ -76,18 +76,24 @@ class Server:
         """ Gives the serve a reference to the webcam viewer object and updates
             the 'localhost' entry in its address book dictionary. """
         self.__server.camera = camera_instance
-        self.__server.address_book['localhost'] = camera_instance
+        self.__server.address_book[self.host] = camera_instance
 
     def add_new_peer(self, ip_addr):
-        try:
-            # Create new peer instance
-            peer = PeerCam(ip_addr, server=self)
-            self.__server.address_book[ip_addr] = peer
-        except socket.gaierror:
-            print("Could not connect to {}: the target host did not respond".format(ip_addr))
-            peer = None
-        # Add the peer to the gui
-        self.app.add_peer(peer)
+        """ Adds a new peer to the server address book if that address
+            does not already exist """
+        if ip_addr not in self.__server.address_book:
+            try:
+                # Create new peer instance
+                peer = PeerCam(ip_addr, server=self)
+                self.__server.address_book[ip_addr] = peer
+            except socket.gaierror:
+                print("Could not connect to {}: the target host did not respond".format(ip_addr))
+                peer = None
+            # Add the peer to the gui
+            self.app.add_peer(peer)
+            return peer
+        else:
+            return None
 
     def get_address_book(self):
         return self.__server.address_book

@@ -108,7 +108,7 @@ class PeerCam(VideoStream):
 
             if ip_addr not in self.local_server.get_address_book():
 
-                self.local_server.new_peer(ip_addr)
+                self.local_server.add_new_peer(ip_addr)
 
         # Push local address book
         self.socket.send(self.local_server.address_book_as_string())
