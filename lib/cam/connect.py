@@ -34,7 +34,7 @@ class RequestHandler(SocketServer.BaseRequestHandler):
 
         # 3. Continually send webcam data to the requesting client
 
-        while self.server.running:
+        while self.server.running and self.server.connected_to(self.client_address):
 
             try:
 
@@ -69,6 +69,7 @@ class Server:
 
         self.__server.address_book = {}
         self.__server.add_new_peer = self.add_new_peer
+        self.__server.connected_to = self.connected_to
 
         self.app = None
 
@@ -77,6 +78,10 @@ class Server:
             the 'localhost' entry in its address book dictionary. """
         camera_instance.update_address(host=self.__server.server_address[0])
         self.__server.address_book[camera_instance.address[0]] = self.__server.camera = camera_instance
+
+    def connected_to(self, address):
+        """ Takes an address tuple and returns True if the address is in the address book """
+        return address[0] in self.__server.address_book
 
     def add_new_peer(self, ip_addr):
         """ Adds a new peer to the server address book if that address
@@ -97,12 +102,9 @@ class Server:
             return None
 
     def remove_peer(self, ip_addr):
-        print "removing", ip_addr
         if ip_addr in self.__server.address_book:
             self.__server.address_book[ip_addr].close()
             del self.__server.address_book[ip_addr]
-            print "done"
-
 
     def get_address_book(self):
         return self.__server.address_book
