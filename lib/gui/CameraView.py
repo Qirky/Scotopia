@@ -53,9 +53,6 @@ class CameraCanvas(Canvas):
         # resize the canvas 
         self.config(width=self.width, height=self.height)
 
-        # rescale all the objects tagged with the "all" tag
-        self.scale("all", 0, 0, wscale, hscale)
-
     def get_size(self):
         return self.root.winfo_width(), self.root.winfo_height()
 

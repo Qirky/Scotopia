@@ -56,7 +56,9 @@ class RequestHandler(SocketServer.BaseRequestHandler):
 
             except socket.error:
 
-                return
+                break
+
+        return
 
 class Server:
     def __init__(self):
@@ -69,6 +71,7 @@ class Server:
 
         self.__server.address_book = {}
         self.__server.add_new_peer = self.add_new_peer
+        self.__server.remove_peer  = self.remove_peer
         self.__server.connected_to = self.connected_to
 
         self.app = None

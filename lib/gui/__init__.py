@@ -95,20 +95,22 @@ class App:
     def remove_peer(self, name):
         """ Removes a peer from the canvas dict and tells the server to remove it too """
         if name != "local":
+            # Close the connection if there is one
             self.canvas.images[name].camera.close()
+            # Delete from canvas widget
+            self.canvas.images[name].config(image="")
             self.canvas.images[name].destroy()
+            # Remove from server address book
             self.server.remove_peer(self.canvas.images[name].camera.address[0])
+            # Remove from local image address book
             del self.canvas.images[name]
-            print "app.remove_peer", name
         return
 
     def add_image(self, name, camera_instance):
         """ Adds the camera instance to the app """
         lbl = ClientLabel(self.canvas, bg="white", bd=self.canvas.label_border_size).define(name, camera_instance)
-        
         self.canvas.images[name] = lbl
-        self.canvas.itemconfig(lbl, tags="all")
-
+        # self.canvas.itemconfig(lbl, tags=("all", name))
         lbl.pack()
 
     def kill(self):
