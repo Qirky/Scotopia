@@ -86,6 +86,22 @@ class App:
             self.add_image("peer" + str(self.nextPeerID()), new_peer)
         return
 
+    def remove_peer_by_ip(self, ip_addr):
+        for name, label in self.canvas.images.items():
+            if ip_addr == label.camera.address[0]:
+                self.remove_peer(name)
+            return
+
+    def remove_peer(self, name):
+        """ Removes a peer from the canvas dict and tells the server to remove it too """
+        if name != "local":
+            self.canvas.images[name].camera.close()
+            self.canvas.images[name].destroy()
+            self.server.remove_peer(self.canvas.images[name].camera.address[0])
+            del self.canvas.images[name]
+            print "app.remove_peer", name
+        return
+
     def add_image(self, name, camera_instance):
         """ Adds the camera instance to the app """
         lbl = ClientLabel(self.canvas, bg="white", bd=self.canvas.label_border_size).define(name, camera_instance)
@@ -105,9 +121,6 @@ class App:
         self.server.close()
 
         self.root.destroy()
-
-    def remove_peer(self, name):
-        return name
 
 if __name__ == "__main__":
 

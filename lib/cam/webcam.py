@@ -100,6 +100,11 @@ class PeerCam(VideoStream):
         # create  connection
         self.connect()
 
+        # Setup threading
+        self.running = True
+        self.thread = Thread(target=self.run)
+        self.thread.start()
+
     def connect(self):
 
         # Connect to the remote
@@ -118,10 +123,7 @@ class PeerCam(VideoStream):
         # Push local address book
         self.socket.send(self.local_server.address_book_as_string())
 
-        # Setup threading
-        self.running = True
-        self.thread = Thread(target=self.run)
-        self.thread.start()
+        return
     
     def run(self):
 
@@ -139,9 +141,11 @@ class PeerCam(VideoStream):
 
             else:
 
-            # Remove client from address book and app TODO
+                # Remove client from app then exit
 
-                break
+                self.local_server.app.remove_peer_by_ip(self.ip_addr)
+
+                return
 
             # 2. Read the numpy array of the image
 
@@ -153,7 +157,7 @@ class PeerCam(VideoStream):
                 
             except:
 
-                self._frame = self.empty_frame()
+                self._frame = self.blank    
                 
             self._w = int(self._frame.shape[1])
             self._h = int(self._frame.shape[0])

@@ -165,7 +165,7 @@ class CameraCanvas(Canvas):
 
             self.images['local'].camera.view = view      
 
-        self.after(50, self.update)
+        self.after(30, self.update)
 
 class ClientLabel(Label):
     """ TKinter Label that holds webcam images """

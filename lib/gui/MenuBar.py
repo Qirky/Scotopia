@@ -49,11 +49,7 @@ class PeerMenu(Menu):
 
     def remove_clicked_peer(self):
         peer = self.app.last_clicked_peer
-        if peer != "local":
-            self.app.canvas.images[peer].camera.close()
-            self.app.canvas.images[peer].destroy()
-            self.app.server.remove_peer(self.app.canvas.images[peer].camera.address[0])
-            del self.app.canvas.images[peer]
+        self.app.remove_peer(peer)
         return
         
 
