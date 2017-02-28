@@ -99,7 +99,7 @@ class App:
             self.canvas.images[name].camera.close()
             # Delete from canvas widget
             self.canvas.images[name].config(image="")
-            self.canvas.images[name].destroy()
+            self.canvas.after(10, self.canvas.images[name].destroy)
             # Remove from server address book
             self.server.remove_peer(self.canvas.images[name].camera.address[0])
             # Remove from local image address book
