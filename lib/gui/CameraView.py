@@ -1,5 +1,6 @@
 from Tkinter import Canvas, Label
 from PIL import Image, ImageTk
+from MenuBar import PeerMenu
 
 class basicEvent:
     def __init__(self, h, w):
@@ -168,24 +169,26 @@ class CameraCanvas(Canvas):
 
 class ClientLabel(Label):
     """ TKinter Label that holds webcam images """
-    def __init__(self, root, client, *args, **kwargs):
+    def __init__(self, root, *args, **kwargs):
+        self.app = root.app
         Label.__init__(self, root, **kwargs)
-        self.camera = client
-        self.bind("<Button-1>", self.on_mousepress)
+        self.bind("<Button-1>", self.popup_menu)
+        self.menu = PeerMenu(root)
+        self.camera = None
+        self.name   = None
 
-    def on_mousepress(self, event):
-        print "hello"
+    def define(self, name, camera_instance):
+        """ Setup with name and camera """
+        self.name = name
+        self.camera = camera_instance
+        return self
 
+    def popup_menu(self, event):
+        """ Create popup menu and store the name of this peer """
+        try:
+            self.app.last_clicked_peer = self.name
+            self.menu.tk_popup(event.x_root, event.y_root, 0)
+        finally:
+            self.menu.grab_release()
+            
 
-
-
-
-
-
-
-
-
-
-
-
-        

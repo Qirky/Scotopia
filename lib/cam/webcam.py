@@ -15,6 +15,9 @@ class VideoStream(object):
         self._h = 200
         self.islooking = False
         self.address = ('localhost', 59123)
+    def update_address(self, **kwargs):
+        self.address = (kwargs.get("host", self.address[0]),
+                        kwargs.get("port", self.address[1]))
     def read(self):
         return self._frame
     def width(self):
@@ -100,14 +103,11 @@ class PeerCam(VideoStream):
     def connect(self):
 
         # Connect to the remote
+
         self.socket.connect(self.address)
 
         # Recv remote address book 
         data = self.socket.recv(2048)
-
-        print data
-        print self.local_server.get_address_book()
-        raw_input()
 
         for ip_addr in data.split():
 
@@ -129,7 +129,19 @@ class PeerCam(VideoStream):
 
             # 1. Single integer 1 or 0 if this peer is viewing the local client
 
-            self.islooking = bool(int(self.socket.recv(1)))
+            data = self.socket.recv(1)
+
+            # If we receive no data, assume the client is lost
+
+            if len(data):
+
+                self.islooking = bool(int(data))
+
+            else:
+
+            # Remove client from address book and app TODO
+
+                break
 
             # 2. Read the numpy array of the image
 

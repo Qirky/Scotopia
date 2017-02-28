@@ -35,11 +35,29 @@ class MenuBar(Menu):
 
             peer = self.app.server.add_new_peer(ip_addr)
 
-            if peer is None:
-
-                print("Error: A connection to '{}' already exists".format(ip_addr))
-
         return
+
+class PeerMenu(Menu):
+    """ Drop down menu that appears when clicking on a peer """
+    def __init__(self, master):
+        self.app = master.app
+        Menu.__init__(self, master.root, tearoff=0)
+        self.add_command(label="Next", command=lambda: None)
+        self.add_command(label="Back", command=lambda: None)
+        self.add_separator()
+        self.add_command(label="Remove", command=self.remove_clicked_peer)
+
+    def remove_clicked_peer(self):
+        peer = self.app.last_clicked_peer
+        if peer != "local":
+            self.app.canvas.images[peer].camera.close()
+            self.app.canvas.images[peer].destroy()
+            self.app.server.remove_peer(self.app.canvas.images[peer].camera.address[0])
+            del self.app.canvas.images[peer]
+        return
+        
+
+    
 
 from Tkinter import Button, Label, Entry
 import tkSimpleDialog

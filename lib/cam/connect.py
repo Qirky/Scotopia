@@ -75,7 +75,8 @@ class Server:
     def set_camera(self, camera_instance):
         """ Gives the serve a reference to the webcam viewer object and updates
             the 'localhost' entry in its address book dictionary. """
-        self.__server.address_book[self.__server.server_address[0]] = self.__server.camera = camera_instance
+        camera_instance.update_address(host=self.__server.server_address[0])
+        self.__server.address_book[camera_instance.address[0]] = self.__server.camera = camera_instance
 
     def add_new_peer(self, ip_addr):
         """ Adds a new peer to the server address book if that address
@@ -84,15 +85,24 @@ class Server:
             try:
                 # Create new peer instance
                 peer = PeerCam(ip_addr, server=self)
-                self.__server.address_book[ip_addr] = peer
-            except socket.gaierror:
+            except socket.error:
                 print("Could not connect to {}: the target host did not respond".format(ip_addr))
                 peer = None
             # Add the peer to the gui
-            self.app.add_peer(peer)
+            if peer is not None:
+                self.__server.address_book[ip_addr] = peer
+                self.app.add_peer(peer)
             return peer
         else:
             return None
+
+    def remove_peer(self, ip_addr):
+        print "removing", ip_addr
+        if ip_addr in self.__server.address_book:
+            self.__server.address_book[ip_addr].close()
+            del self.__server.address_book[ip_addr]
+            print "done"
+
 
     def get_address_book(self):
         return self.__server.address_book

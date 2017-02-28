@@ -25,6 +25,7 @@ class App:
         # Number of connected peers
 
         self.__peers = 0
+        self.clicked_peer = None
 
         # Set up master widget  
 
@@ -75,24 +76,27 @@ class App:
         self.server.start()
 
     def nextPeerID(self):
+        """ Get the ID for the next peer to be added """
         self.__peers += 1
         return self.__peers
 
     def add_peer(self, new_peer):
         """ Connects to another Scotopia instance and adds to address book """
         if new_peer != None:
-
             self.add_image("peer" + str(self.nextPeerID()), new_peer)
-
         return
 
     def add_image(self, name, camera_instance):
-        lbl = ClientLabel(self.canvas, camera_instance, bg="white", bd=self.canvas.label_border_size)
+        """ Adds the camera instance to the app """
+        lbl = ClientLabel(self.canvas, bg="white", bd=self.canvas.label_border_size).define(name, camera_instance)
+        
         self.canvas.images[name] = lbl
         self.canvas.itemconfig(lbl, tags="all")
+
         lbl.pack()
 
     def kill(self):
+        """ Closes the webcam / sockets connected with the app """
 
         for label in self.canvas.images.values():
 
@@ -101,6 +105,9 @@ class App:
         self.server.close()
 
         self.root.destroy()
+
+    def remove_peer(self, name):
+        return name
 
 if __name__ == "__main__":
 
